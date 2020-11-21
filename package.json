@@ -11,12 +11,20 @@
     "develop": "gatsby develop",
     "start": "gatsby develop",
     "build": "gatsby build",
-    "clean": "gatsby clean"
+    "clean": "gatsby clean",
+    "type-check": "tsc --noEmit"
   },
   "license": "0BSD",
   "dependencies": {
+    "@apollo/client": "^3.2.7",
+    "dotenv": "^8.2.0",
+    "faunadb": "^4.0.0",
     "gatsby": "^2.26.1",
+    "gatsby-plugin-typescript": "^2.7.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
+  },
+  "devDependencies": {
+    "typescript": "^4.1.2"
   }
 }
