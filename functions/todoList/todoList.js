@@ -9,7 +9,7 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    addTodo(task: String): TODO!
+    addTodo(task: String!): TODO!
     checkedTodo(id: ID!, done: Boolean): TODO
   }
 
@@ -46,7 +46,7 @@ const resolvers = {
         );
         return result.data.map((d) => {
           return {
-            id: d.ts,
+            id: d.ref.id,
             task: d.data.task,
             done: d.data.done,
           };
@@ -58,6 +58,27 @@ const resolvers = {
   },
 
   Mutation: {
+    checkedTodo: async (_, { id, done }) => {
+      try {
+        const client = new faunadb.Client({
+          secret: process.env.TODO_FAUNA_SECRET_KEY,
+        });
+
+        const data = await client.query(
+          query.Update(query.Ref(query.Collection("Todos"), id), {
+            data: { done: done },
+          })
+        );
+        console.log("DATA : ", data);
+        return {
+          id: data.ref.id,
+          task: data.data.task,
+          done: data.data.done,
+        };
+      } catch (error) {
+        console.log("Error : ", error);
+      }
+    },
     addTodo: async (_, { task }) => {
       try {
         const client = new faunadb.Client({
@@ -70,26 +91,14 @@ const resolvers = {
           })
         );
         console.log("DATA : ", data);
-        return data;
+        return {
+          id: data.ref.id,
+          task: data.data.task,
+          done: data.data.done,
+        };
       } catch (error) {
         console.log("Error : ", error);
       }
-    },
-
-    checkedTodo: async (_, { id, done }) => {
-      try {
-        const client = new faunadb.Client({
-          secret: process.env.TODO_FAUNA_SECRET_KEY,
-        });
-
-        const data = await client.query(
-          q.Update(q.Ref(q.Collection("Todos"), id), {
-            data: { done: done },
-          })
-        );
-        console.log("Data : ", data);
-        return data;
-      } catch (error) {}
     },
   },
 };
