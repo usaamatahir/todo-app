@@ -11,6 +11,7 @@ const typeDefs = gql`
   type Mutation {
     addTodo(task: String!): TODO!
     checkedTodo(id: ID!, done: Boolean): TODO
+    deleteTodo(id: ID!): TODO
   }
 
   type TODO {
@@ -89,6 +90,25 @@ const resolvers = {
           query.Create(query.Collection("Todos"), {
             data: { task: task, done: false },
           })
+        );
+        console.log("DATA : ", data);
+        return {
+          id: data.ref.id,
+          task: data.data.task,
+          done: data.data.done,
+        };
+      } catch (error) {
+        console.log("Error : ", error);
+      }
+    },
+    deleteTodo: async (_, { id }) => {
+      try {
+        const client = new faunadb.Client({
+          secret: process.env.TODO_FAUNA_SECRET_KEY,
+        });
+
+        const data = await client.query(
+          query.Delete(query.Ref(query.Collection("Todos"), id))
         );
         console.log("DATA : ", data);
         return {

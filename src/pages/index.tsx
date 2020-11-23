@@ -11,6 +11,8 @@ import {
 } from "@material-ui/core";
 import Alert from "@material-ui/lab/Alert";
 import { Button } from "@material-ui/core";
+import DeleteSharpIcon from "@material-ui/icons/DeleteSharp";
+import "./style.css";
 
 type TODOData = {
   done: boolean;
@@ -48,6 +50,16 @@ const ADD_TODO = gql`
   }
 `;
 
+const DELETE_TODO = gql`
+  mutation deleteTodo($id: ID!) {
+    deleteTodo(id: $id) {
+      id
+      task
+      done
+    }
+  }
+`;
+
 const UPDATE_TASK = gql`
   mutation checkedTodo($id: ID!, $done: Boolean) {
     checkedTodo(id: $id, done: $done) {
@@ -61,6 +73,7 @@ const Home = () => {
   const [task, setTask] = useState("");
 
   const [addTodo] = useMutation(ADD_TODO);
+  const [deleteTodo] = useMutation(DELETE_TODO);
   const addTask = () => {
     addTodo({
       variables: {
@@ -68,7 +81,17 @@ const Home = () => {
       },
       refetchQueries: [{ query: GET_TODOS }],
     });
+    setTask("");
   };
+
+  function handleDelete(id: string) {
+    deleteTodo({
+      variables: {
+        id: id,
+      },
+      refetchQueries: [{ query: GET_TODOS }],
+    });
+  }
 
   const [checkedTodo] = useMutation(UPDATE_TASK);
 
@@ -77,56 +100,70 @@ const Home = () => {
   const classes = useStyles();
 
   if (loading) {
-    return <CircularProgress variant="static" value={25} />;
+    return (
+      <CircularProgress className="todoMain" variant="static" value={25} />
+    );
   }
 
   if (error) {
     return (
-      <Alert severity="error">This is an error alert — check it out!</Alert>
+      <Alert className="todoMain" severity="error">
+        This is an error alert — check it out!
+      </Alert>
     );
   }
   return (
-    <div>
+    <div className="todoMain">
       <h1>TODO APP</h1>
       <form className={classes.root} noValidate autoComplete="off">
         <TextField
           id="outlined-basic"
-          label="Outlined"
+          label="Enter your Task"
           variant="outlined"
+          required
           value={task}
           onChange={(e) => setTask(e.target.value)}
-          required
+          fullWidth
         />
       </form>
-      <Button variant="contained" color="primary" onClick={addTask}>
+      <Button
+        variant="contained"
+        color="primary"
+        size="large"
+        onClick={addTask}
+      >
         Add Task
       </Button>
-      {data && console.log(data.todos)}
 
       {data &&
         data.todos.map((d: TODOData) => {
           return (
-            <FormGroup row key={d.id}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={d.done}
-                    onClick={async () => {
-                      checkedTodo({
-                        variables: {
-                          id: d.id,
-                          done: !d.done,
-                        },
-                        refetchQueries: [{ query: GET_TODOS }],
-                      });
-                    }}
-                    name="checkedB"
-                    color="primary"
-                  />
-                }
-                label={d.task}
-              />
-            </FormGroup>
+            <div className="list" key={d.id}>
+              <FormGroup row>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={d.done}
+                      onClick={async () => {
+                        checkedTodo({
+                          variables: {
+                            id: d.id,
+                            done: !d.done,
+                          },
+                          refetchQueries: [{ query: GET_TODOS }],
+                        });
+                      }}
+                      name="checkedB"
+                      color="primary"
+                    />
+                  }
+                  label={d.task}
+                />
+              </FormGroup>
+              <i className="icons" onClick={() => handleDelete(d.id)}>
+                <DeleteSharpIcon />
+              </i>
+            </div>
           );
         })}
     </div>
